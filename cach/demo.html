@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Gesture Volume Control</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #handDetector {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <video id="handDetector"></video>
+
+  <script src="https://cdn.jsdelivr.net/npm/mediapipe@0.10.7/dist/mediapipe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pycaw@2021.10.13/dist/pycaw.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      // Volume Control Library Usage
+      const devices = AudioUtilities.GetSpeakers();
+      const interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, null);
+      const volume = cast(interface, POINTER(IAudioEndpointVolume));
+      const volRange = volume.GetVolumeRange();
+      const minVol = volRange[0];
+      const maxVol = volRange[1];
+      let volBar = 400;
+      let volPer = 0;
+
+      // Webcam Setup
+      const video = document.getElementById('handDetector');
+      navigator.mediaDevices.getUserMedia({ video: {} })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((err) => {
+          console.error('Error accessing webcam:', err);
+        });
+
+      // Mediapipe Hand Landmark Model
+      const hands = new mp.Hands({
+        modelComplexity: 0,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+
+      hands.onResults(handleHandResults);
+
+      function handleHandResults(results) {
+        const image = results.image;
+        const landmarks = results.multiHandLandmarks;
+
+        // Your existing JavaScript code for hand gesture processing
+        // ...
+
+        // For demonstration purposes, you can include a simple alert
+        alert('Hand gesture processing code goes here.');
+      }
+
+      // Start streaming hand landmarks
+      hands.start();
+
+      video.addEventListener('loadeddata', () => {
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        const maxWidth = window.innerWidth;
+        const maxHeight = window.innerHeight;
+        let width = maxWidth;
+        let height = maxWidth / aspectRatio;
+
+        if (height > maxHeight) {
+          height = maxHeight;
+          width = maxHeight * aspectRatio;
+        }
+
+        video.width = width;
+        video.height = height;
+      });
+    });
+  </script>
+</body>
+</html>
